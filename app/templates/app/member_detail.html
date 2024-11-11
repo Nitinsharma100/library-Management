@@ -1,0 +1,188 @@
+{% extends 'app/base.html' %}
+
+{% block title %}{{ member.name }} - Library Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Member Details Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Member Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>Name:</th>
+                                <td>{{ member.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ member.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td>{{ member.phone }}</td>
+                            </tr>
+                            <tr>
+                                <th>Address:</th>
+                                <td>{{ member.address }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="badge {% if member.status == 'ACTIVE' %}bg-success
+                                                      {% elif member.status == 'INACTIVE' %}bg-secondary
+                                                      {% else %}bg-danger{% endif %}">
+                                        {{ member.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Member Since:</th>
+                                <td>{{ member.membership_date|date:"M d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Fines:</th>
+                                <td>
+                                    {% if member.total_fines > 0 %}
+                                        <span class="text-danger">${{ member.total_fines }}</span>
+                                    {% else %}
+                                        $0.00
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'app:member-edit' member.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Edit Member
+                        </a>
+                        {% if member.status == 'ACTIVE' %}
+                        <a href="{% url 'app:issue-book' %}?member={{ member.pk }}" class="btn btn-success">
+                            <i class="fas fa-book me-2"></i>Issue New Book
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'app:member-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Books and History -->
+        <div class="col-md-8">
+            <!-- Currently Borrowed Books -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Currently Borrowed Books</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in current_books %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'app:book-detail' issue.book.pk %}">
+                                            {{ issue.book.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ issue.issue_date|date:"M d, Y" }}</td>
+                                    <td>{{ issue.due_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if issue.due_date < now %}
+                                            <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Issued</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'app:return-book' issue.pk %}" 
+                                           class="btn btn-sm btn-success"
+                                           onclick="return confirm('Are you sure you want to return this book?')">
+                                            <i class="fas fa-undo me-1"></i>Return
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No books currently borrowed</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Borrowing History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Borrowing History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Issue Date</th>
+                                    <th>Return Date</th>
+                                    <th>Fine</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in issue_history %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'app:book-detail' issue.book.pk %}">
+                                            {{ issue.book.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ issue.issue_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if issue.return_date %}
+                                            {{ issue.return_date|date:"M d, Y" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if issue.fine_amount > 0 %}
+                                            <span class="text-danger">${{ issue.fine_amount }}</span>
+                                        {% else %}
+                                            $0.00
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No borrowing history found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

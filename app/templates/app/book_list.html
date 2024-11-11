@@ -1,0 +1,199 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Books - Library Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-3">
+            <div class="categories-section">
+                <h5 class="mb-3">Categories</h5>
+                <div class="list-group">
+                    <a href="{% url 'app:book-list' %}" 
+                       class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                        All Categories
+                    </a>
+                    {% for code, display_name, is_active in categories %}
+                        <a href="{% url 'app:book-list' %}?category={{ code }}" 
+                           class="list-group-item list-group-item-action {% if is_active %}active{% endif %}">
+                            {{ display_name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        {% if current_category_name %}
+                            {{ current_category_name }} Books
+                        {% else %}
+                            All Books
+                        {% endif %}
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <form class="d-flex" method="get">
+                            {% if current_category %}
+                                <input type="hidden" name="category" value="{{ current_category }}">
+                            {% endif %}
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" 
+                                       placeholder="Search books..." 
+                                       value="{{ search_query }}">
+                                <button class="btn btn-outline-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        <a href="{% url 'app:book-add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Book
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in books %}
+                            <tr>
+                                <td>{{ book.title }}</td>
+                                <td>{{ book.author }}</td>
+                                <td>
+                                    <span class="badge {% if book.status == 'AVAILABLE' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ book.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'app:book-detail' book.pk %}" 
+                                           class="btn btn-sm btn-info text-white" 
+                                           title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'app:book-edit' book.pk %}" 
+                                           class="btn btn-sm btn-warning text-white" 
+                                           title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if book.status == 'AVAILABLE' %}
+                                        <a href="{% url 'app:issue-book' %}?book={{ book.pk }}" 
+                                           class="btn btn-sm btn-success" 
+                                           title="Issue Book">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No books found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if is_paginated %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.categories-section {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.list-group-item {
+    border: none;
+    padding: 8px 15px;
+    margin-bottom: 2px;
+    border-radius: 4px !important;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+}
+
+.list-group-item:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+
+.content-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.table th {
+    border-top: none;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 500;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-group {
+    gap: 5px;
+}
+
+.btn-group .btn {
+    border-radius: 4px !important;
+}
+</style>
+{% endblock %}

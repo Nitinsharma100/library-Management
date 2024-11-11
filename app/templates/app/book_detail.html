@@ -1,0 +1,136 @@
+{% extends 'app/base.html' %}
+
+{% block title %}{{ book.title }} - Library Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Book Details Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Book Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-book fa-5x text-primary"></i>
+                    </div>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>Title:</th>
+                                <td>{{ book.title }}</td>
+                            </tr>
+                            <tr>
+                                <th>Author:</th>
+                                <td>{{ book.author }}</td>
+                            </tr>
+                            <tr>
+                                <th>ISBN:</th>
+                                <td>{{ book.isbn }}</td>
+                            </tr>
+                            <tr>
+                                <th>Category:</th>
+                                <td>{{ book.get_category_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="badge {% if book.status == 'AVAILABLE' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ book.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Added Date:</th>
+                                <td>{{ book.added_date|date:"M d, Y" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'app:book-edit' book.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Edit Book
+                        </a>
+                        {% if book.status == 'AVAILABLE' %}
+                        <a href="{% url 'app:issue-book' %}?book={{ book.pk }}" class="btn btn-success">
+                            <i class="fas fa-exchange-alt me-2"></i>Issue Book
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'app:book-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue History -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Issue History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Return Date</th>
+                                    <th>Status</th>
+                                    <th>Fine</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in issue_history %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'app:member-detail' issue.member.pk %}">
+                                            {{ issue.member.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ issue.issue_date|date:"M d, Y" }}</td>
+                                    <td>{{ issue.due_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if issue.return_date %}
+                                            {{ issue.return_date|date:"M d, Y" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if issue.is_returned %}
+                                            <span class="badge bg-success">Returned</span>
+                                        {% else %}
+                                            {% if issue.due_date < now %}
+                                                <span class="badge bg-danger">Overdue</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Issued</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if issue.fine_amount > 0 %}
+                                            <span class="text-danger">${{ issue.fine_amount }}</span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No issue history found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

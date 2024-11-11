@@ -1,0 +1,153 @@
+{% extends 'app/base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Book - {{ form.instance.title }}{% else %}Add New Book{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        {% if form.instance.pk %}
+                            Edit Book - {{ form.instance.title }}
+                        {% else %}
+                            Add New Book
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Title Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                            <input type="text" 
+                                   class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                                   id="{{ form.title.id_for_label }}"
+                                   name="{{ form.title.name }}"
+                                   value="{{ form.title.value|default:'' }}"
+                                   required>
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.title.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- ISBN Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.isbn.id_for_label }}" class="form-label">ISBN</label>
+                            <input type="text" 
+                                   class="form-control {% if form.isbn.errors %}is-invalid{% endif %}"
+                                   id="{{ form.isbn.id_for_label }}"
+                                   name="{{ form.isbn.name }}"
+                                   value="{{ form.isbn.value|default:'' }}"
+                                   required>
+                            {% if form.isbn.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.isbn.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Author Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.author.id_for_label }}" class="form-label">Author</label>
+                            <input type="text" 
+                                   class="form-control {% if form.author.errors %}is-invalid{% endif %}"
+                                   id="{{ form.author.id_for_label }}"
+                                   name="{{ form.author.name }}"
+                                   value="{{ form.author.value|default:'' }}"
+                                   required>
+                            {% if form.author.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.author.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Category Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            <select class="form-select {% if form.category.errors %}is-invalid{% endif %}"
+                                    id="{{ form.category.id_for_label }}"
+                                    name="{{ form.category.name }}"
+                                    required>
+                                <option value="">Select Category</option>
+                                {% for value, label in form.fields.category.choices %}
+                                    <option value="{{ value }}" 
+                                            {% if form.category.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.category.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.instance.pk %}
+                        <!-- Status Field (only for editing) -->
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            <select class="form-select {% if form.status.errors %}is-invalid{% endif %}"
+                                    id="{{ form.status.id_for_label }}"
+                                    name="{{ form.status.name }}"
+                                    required>
+                                {% for value, label in form.fields.status.choices %}
+                                    <option value="{{ value }}" 
+                                            {% if form.status.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.status.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.status.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if form.instance.pk %}Update Book{% else %}Add Book{% endif %}
+                            </button>
+                            <a href="{% url 'app:book-list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>
+{% endblock %}
+{% endblock %}
